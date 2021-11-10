@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>mainW</class>
+ <widget class="QWidget" name="mainW">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Cookbook</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: #313333;
+color: #FFFFFF;</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>7</number>
+   </property>
+   <property name="rightMargin">
+    <number>7</number>
+   </property>
+   <property name="bottomMargin">
+    <number>7</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="menuactionHBL" stretch="2,7">
+     <item>
+      <widget class="QListWidget" name="menuLW">
+       <property name="minimumSize">
+        <size>
+         <width>125</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: #202222; color: #FFFFFF; selection-background-color: #D7E646; selection-color: #313333</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Dummy Menu A</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Dummy Menu B</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Dummy Menu C</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Dummy Menu D</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="rightVBL" stretch="0,0">
+       <item>
+        <layout class="QHBoxLayout" name="codefuncHBL">
+         <item>
+          <widget class="QPushButton" name="funcPB">
+           <property name="styleSheet">
+            <string notr="true">background-color: #D7E646; color: #313333</string>
+           </property>
+           <property name="text">
+            <string>Func</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="codePB">
+           <property name="text">
+            <string>Code</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="actionFL">
+         <item row="0" column="0">
+          <widget class="QFrame" name="dummyF">
+           <property name="styleSheet">
+            <string notr="true">background-color: #FFFFFF</string>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="copyrightHL">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>3</height>
+      </size>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="copyrightHBL" stretch="0,0,0">
+     <item>
+      <spacer name="copyrightS_L">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>60</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="copyrightL">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>5</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>10</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: #a6a6a6;</string>
+       </property>
+       <property name="text">
+        <string>© 2021 Q for Quesadilla. All Rights Reserved.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="copyrightS_R">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>60</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

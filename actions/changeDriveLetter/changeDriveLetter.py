@@ -2,11 +2,14 @@
 import os
 import sys
 import re
+import json
 import subprocess
 from functools import partial
+from string import ascii_uppercase
+from collections import OrderedDict
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QWidget, QTableWidgetItem, QCheckBox, QPushButton, QHBoxLayout, QHeaderView
+from PySide2.QtWidgets import QApplication, QWidget, QTableWidgetItem, QCheckBox, QComboBox, QPushButton, QHBoxLayout, QHeaderView
 from PySide2.QtCore import QFile, Qt
 
 
@@ -60,12 +63,14 @@ class Action(object):
     ############
 
 
-    def __onEditAssignment(self):
-        print('edit assignment')
+    def __onEditPath(self):
+        print('edit path')
 
 
     def __onAddPressed(self, qTableWidget):
-        qTableWidget.insertRow(0)
+        row = qTableWidget.rowCount()
+        qTableWidget.insertRow(row)
+        self.__createTableWidgetCells(self.actionUi.assignmentTW, row)
 
 
     def __onRemovePressed(self, qTableWidget):
@@ -74,21 +79,26 @@ class Action(object):
             qTableWidget.removeRow(row)
 
 
-    def __onChecked(self, drive, *args):###############
-        ##############need to get latest path that is in the selected cell
-        #print(self.__getTableWidget(self.actionUi.assignmentTW))
-        #print(drive, path)
-        #print(self.actionUi.assignmentTW.selectedIndexes())
+    def __onChecked(self, index, *args):
         drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
-        print(drivePath[drive])
-
-
-    def __onOpenPressed(self, drive):
-        ##############need to get latest path that is in the selected cell
-        drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
-        path = drivePath[drive]
+        print(list(drivePath.items()))
+        print(index)
+        path = list(drivePath.items())[index][1]
         print(path)
-        os.startfile(path)
+
+    def __onDriveChanged(self, index, *args):
+        print(index)
+
+
+    def __onOpenPressed(self, index):
+        drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
+        try:
+            path = list(drivePath.items())[index][1]
+        except IndexError:
+            path = ''
+
+        if os.path.exists(path):
+            os.startfile(path)
 
 
     def __onConfigPressed(self):
@@ -106,11 +116,11 @@ class Action(object):
     ###########
 
 
-    def __getDrive(self):
+    def __getActiveDrivePath(self):
         command = 'net use'
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         drivePathText = ''
-        drivePathDict = {}
+        drivePathDict = OrderedDict()
 
         while True:
             line = proc.stdout.readline()
@@ -120,12 +130,20 @@ class Action(object):
             if not line and proc.poll() is not None:
                 break
 
-        pattern = r'([A-Z]+):        ([A-Za-z0-9/\\.\$-]+)'
+        pattern = r'([A-Z]+):        ([A-Za-z0-9/\\.\$-_]+)'
         for drivePath in re.findall(pattern, drivePathText):
             drive = drivePath[0]
             path = drivePath[1]
+            if r'\\' in path:
+                path = path.replace(r'\\', '\\')
             drivePathDict[drive] = path
 
+        return drivePathDict
+
+
+    def __getCustomDrivePath(self):
+        drivePath = self.__readJson(self.__configPath)
+        drivePathDict = OrderedDict(drivePath)
         return drivePathDict
 
 
@@ -143,11 +161,22 @@ class Action(object):
 
     def __updateConfig(self):
         self.__updateJson(self.__configPath, {})
+        # store only custom made rows in config
+
+
+    def __editAssignment(self):
+        pass
+        # check if path is valid
+        # unmount and uncheck if drive letter is used
+        # mount and check
 
 
     def __updateAssignment(self):
-        drivePath = self.__getDrive()
-        self.__setTableWidget(self.actionUi.assignmentTW, drivePath)
+        activeDrivePath = self.__getActiveDrivePath()
+        customDrivePath = self.__getCustomDrivePath()
+        print(activeDrivePath)
+        print(customDrivePath)
+        self.__setTableWidget(self.actionUi.assignmentTW, activeDrivePath, customDrivePath)
 
 
     ########
@@ -175,88 +204,65 @@ class Action(object):
         self.__writeJson(jsonPath, data)
 
 
-    def __getLineEdit(self, qLineEdit):
-        return qLineEdit.text()
+    #def __getLineEdit(self, qLineEdit):
+    #    return qLineEdit.text()
 
 
-    def __getTextEdit(self, qTextEdit):
-        return qTextEdit.toPlainText()
+    #def __getTextEdit(self, qTextEdit):
+    #    return qTextEdit.toPlainText()
+
+
+    def __getComboBox(self, qComboBox):
+        return qComboBox.currentText()
+
+
+    def __setComboBox(self, qComboBox, value):
+        index = qComboBox.findText(value)
+        if qComboBox != 1:
+            qComboBox.setCurrentIndex(index)
+        return index
 
 
     def __getTableWidget(self, qTableWidget):
         drivePath = {}
-        rowCount = qTableWidget.rowCount()
-        for row in range(rowCount):
+        rows = qTableWidget.rowCount()
 
-            drive = qTableWidget.item(row, 1)
-            path = qTableWidget.item(row, 2)
+        for row in range(rows):
 
-            try:
-                drive = drive.text()
-            except AttributeError:
-                continue  # TODO: UI should not allow this to be empty
+            qWidgetComboBox = qTableWidget.cellWidget(row, 1)####################
+            qComboBox = qWidgetComboBox.findChild(QComboBox)
+            qTableWidgetItem = qTableWidget.item(row, 2)
 
-            try:
-                path = path.text()
-            except AttributeError:
-                path = ''
+            drive = qComboBox.currentText() ##################################This becomes ''
+            path = qTableWidgetItem.text()
 
             drivePath[drive] = path
 
         return drivePath
 
 
-    def __setTableWidget(self, qTableWidget, drivePath):
+    def __setTableWidget(self, qTableWidget, activeDrivePath, customDrivePath):
         for i in range(qTableWidget.rowCount() + 1):
             qTableWidget.removeRow(0)
 
-        for i in range(len(drivePath)):
+        for i in range(len(activeDrivePath) + len(customDrivePath)):
             qTableWidget.insertRow(0)
 
-        if len(drivePath) == 0:
-            qTableWidget.insertRow(0)
-            return drivePath
+        #if len(drivePath) == 0:
+        #    qTableWidget.insertRow(0)
+        #    return drivePath
 
-        row = 0
-        for drive, path in drivePath.items():
-            #path = os.path.normpath(path)######################################
+        activeRows = len(activeDrivePath.items())
+        for activeRow in range(activeRows):
+            drive = list(activeDrivePath.items())[activeRow][0]
+            path = list(activeDrivePath.items())[activeRow][1]
+            self.__createTableWidgetCells(qTableWidget, activeRow, True, drive, path)
 
-            # checkbox
-            qWidgetCB = QWidget()
-            qCheckBox = QCheckBox()
-            qCheckBox.setChecked(True)
-            qCheckBox.stateChanged.connect(partial(self.__onChecked, drive))
-            qHBoxLayoutCB = QHBoxLayout(qTableWidget)
-            qHBoxLayoutCB.addWidget(qCheckBox)
-            qHBoxLayoutCB.setAlignment(Qt.AlignCenter)
-            qHBoxLayoutCB.setContentsMargins(0, 0, 0, 0);
-            qWidgetCB.setLayout(qHBoxLayoutCB)
-
-            # drive
-            driveItem = QTableWidgetItem()
-            driveItem.setText(drive)
-
-            # path
-            pathItem = QTableWidgetItem()
-            pathItem.setText(path)
-
-            # push button
-            qWidgetPB = QWidget()
-            qPushButton = QPushButton()
-            qPushButton.setText('...')
-            qPushButton.setFixedSize(24, 21)
-            qPushButton.clicked.connect(partial(self.__onOpenPressed, drive))
-            qHBoxLayoutPB = QHBoxLayout(qTableWidget)
-            qHBoxLayoutPB.addWidget(qPushButton)
-            qHBoxLayoutPB.setAlignment(Qt.AlignCenter)
-            qHBoxLayoutPB.setContentsMargins(0, 0, 0, 0);
-            qWidgetPB.setLayout(qHBoxLayoutPB)
-
-            qTableWidget.setCellWidget(row, 0, qWidgetCB)
-            qTableWidget.setItem(row, 1, driveItem)
-            qTableWidget.setItem(row, 2, pathItem)
-            qTableWidget.setCellWidget(row, 3, qWidgetPB)
-            row += 1
+        customRows = len(customDrivePath.items())
+        for customRow in range(customRows):
+            drive = list(customDrivePath.items())[customRow][0]
+            path = list(customDrivePath.items())[customRow][1]
+            self.__createTableWidgetCells(qTableWidget, activeRows + customRow, False, drive, path)
 
         qTableWidget.setColumnWidth(0, 45)
         qTableWidget.setColumnWidth(1, 45)
@@ -271,4 +277,61 @@ class Action(object):
         qHeaderView.setSectionResizeMode(3, QHeaderView.Interactive)
         qHeaderView.setStretchLastSection(False)
 
-        return drivePath
+        return activeDrivePath, customDrivePath
+    
+    
+    def __createTableWidgetCells(self, qTableWidget, row, status=False, drive='', path=''):
+
+        #print(index)
+        #print(drivePath)
+        #print(drivePath.items())
+        #drive = list(drivePath.items())[row][0]
+        #path = list(drivePath.items())[row][1]
+
+        # QCheckBox index
+        qWidgetCheckBox = QWidget()
+        qCheckBox = QCheckBox()
+        if status:
+            qCheckBox.setChecked(True)
+        qCheckBox.stateChanged.connect(partial(self.__onChecked, row))
+        qHBoxLayoutCheckBox = QHBoxLayout(qTableWidget)
+        qHBoxLayoutCheckBox.addWidget(qCheckBox)
+        qHBoxLayoutCheckBox.setAlignment(Qt.AlignCenter)
+        qHBoxLayoutCheckBox.setContentsMargins(0, 0, 0, 0);
+        qWidgetCheckBox.setLayout(qHBoxLayoutCheckBox)
+
+        # QComboBox
+        qWidgetComboBox = QWidget()
+        qComboBox = QComboBox()
+        abc = dict.fromkeys(ascii_uppercase, 0)
+        qComboBox.addItems(sorted(abc.keys()))
+        if drive:
+            self.__setComboBox(qComboBox, drive)
+        qComboBox.currentIndexChanged.connect(partial(self.__onDriveChanged, row))
+        qHBoxLayoutComboBox = QHBoxLayout(qTableWidget)
+        qHBoxLayoutComboBox.addWidget(qComboBox)
+        qHBoxLayoutComboBox.setAlignment(Qt.AlignCenter)
+        qHBoxLayoutComboBox.setContentsMargins(0, 0, 0, 0);
+        qWidgetComboBox.setLayout(qHBoxLayoutComboBox)
+
+        # QTableWidgetItem
+        qTableWidgetItem = QTableWidgetItem()
+        if path:
+            qTableWidgetItem.setText(path)
+
+        # QPushButton
+        qWidgetPushButton = QWidget()
+        qPushButton = QPushButton()
+        qPushButton.setText('...')
+        qPushButton.setFixedSize(24, 21)
+        qPushButton.clicked.connect(partial(self.__onOpenPressed, row))
+        qHBoxLayoutPushButton = QHBoxLayout(qTableWidget)
+        qHBoxLayoutPushButton.addWidget(qPushButton)
+        qHBoxLayoutPushButton.setAlignment(Qt.AlignCenter)
+        qHBoxLayoutPushButton.setContentsMargins(0, 0, 0, 0);
+        qWidgetPushButton.setLayout(qHBoxLayoutPushButton)
+
+        qTableWidget.setCellWidget(row, 0, qWidgetCheckBox)
+        qTableWidget.setCellWidget(row, 1, qWidgetComboBox)
+        qTableWidget.setItem(row, 2, qTableWidgetItem)
+        qTableWidget.setCellWidget(row, 3, qWidgetPushButton)

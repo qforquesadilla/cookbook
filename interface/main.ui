@@ -46,26 +46,6 @@ color: #FFFFFF;</string>
        <property name="styleSheet">
         <string notr="true">background-color: #202222; color: #FFFFFF; selection-background-color: #D7E646; selection-color: #313333</string>
        </property>
-       <item>
-        <property name="text">
-         <string>Dummy Menu A</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dummy Menu B</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dummy Menu C</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dummy Menu D</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>
@@ -83,9 +63,9 @@ color: #FFFFFF;</string>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="codePB">
+          <widget class="QPushButton" name="notePB">
            <property name="text">
-            <string>Code</string>
+            <string>Note</string>
            </property>
           </widget>
          </item>

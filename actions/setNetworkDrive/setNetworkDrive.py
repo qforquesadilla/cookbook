@@ -12,46 +12,24 @@ from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QWidget, QTableWidgetItem, QCheckBox, QComboBox, QPushButton, QHBoxLayout, QHeaderView
 from PySide2.QtCore import QFile, Qt
 
+from .._actionBase import _ActionBase
 
-class Action(object):
+
+class Action(_ActionBase):
 
     def __init__(self):
         '''
         '''
 
-        # variables
-        self.actionName = 'Change Drive Letter'
-        self.actionCategory = 'System'
+        super().__init__(__file__, 'Set Network Drive', 'System')
 
-        # config
-        self.__actionRootDir = os.path.abspath(os.path.dirname(__file__))
-        self.__configPath = os.path.normpath(os.path.join(self.__actionRootDir, 'data/config.json'))
-
-        # ui & commands
-        self.__buildUi()
+        self._buildUi()
         self.__linkCommands()
 
         self.__updateAssignment()
 
 
-    def __buildUi(self):##########################INHERIT THIS
-        '''
-        '''
-
-        # define ui file paths
-        app = QApplication.instance()
-        actionUiPath = os.path.normpath(os.path.join(self.__actionRootDir, 'interface/main.ui')).replace('\\', '/')
-
-        # open ui files
-        loader = QUiLoader()
-        actionUiFile = QFile(actionUiPath)
-        actionUiFile.open(QFile.ReadOnly)
-
-        # create ui objects
-        self.actionUi = loader.load(actionUiPath)
-
-
-    def __linkCommands(self):##########################INHERIT THIS
+    def __linkCommands(self):
         self.actionUi.assignmentAddPB.clicked.connect(partial(self.__onAddPressed, self.actionUi.assignmentTW))
         self.actionUi.assignmentRemovePB.clicked.connect(partial(self.__onRemovePressed, self.actionUi.assignmentTW))
         self.actionUi.configPB.clicked.connect(self.__onConfigPressed)
@@ -81,19 +59,22 @@ class Action(object):
 
     def __onChecked(self, index, *args):
         drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
-        print(list(drivePath.items()))
-        print(index)
-        path = list(drivePath.items())[index][1]
-        print(path)
+        drive = drivePath[index][0]
+        path = drivePath[index][1]
+        print(index, drive, path)
+
 
     def __onDriveChanged(self, index, *args):
-        print(index)
+        drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
+        drive = drivePath[index][0]
+        path = drivePath[index][1]
+        print(index, drive, path)
 
 
     def __onOpenPressed(self, index):
         drivePath = self.__getTableWidget(self.actionUi.assignmentTW)
         try:
-            path = list(drivePath.items())[index][1]
+            path = drivePath[index][1]
         except IndexError:
             path = ''
 
@@ -120,7 +101,7 @@ class Action(object):
         command = 'net use'
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         drivePathText = ''
-        drivePathDict = OrderedDict()
+        drivePathList = []
 
         while True:
             line = proc.stdout.readline()
@@ -136,15 +117,15 @@ class Action(object):
             path = drivePath[1]
             if r'\\' in path:
                 path = path.replace(r'\\', '\\')
-            drivePathDict[drive] = path
+            drivePathList.append([drive, path])
 
-        return drivePathDict
+        return drivePathList
 
 
     def __getCustomDrivePath(self):
-        drivePath = self.__readJson(self.__configPath)
-        drivePathDict = OrderedDict(drivePath)
-        return drivePathDict
+        drivePath = self.__readJson(self._configPath)
+        drivePathList = drivePath['customDrivePath']
+        return drivePathList
 
 
     def __mountDrive(self, drive, path):
@@ -224,7 +205,7 @@ class Action(object):
 
 
     def __getTableWidget(self, qTableWidget):
-        drivePath = {}
+        drivePath = []
         rows = qTableWidget.rowCount()
 
         for row in range(rows):
@@ -236,7 +217,7 @@ class Action(object):
             drive = qComboBox.currentText() ##################################This becomes ''
             path = qTableWidgetItem.text()
 
-            drivePath[drive] = path
+            drivePath.append([drive, path])
 
         return drivePath
 
@@ -252,16 +233,16 @@ class Action(object):
         #    qTableWidget.insertRow(0)
         #    return drivePath
 
-        activeRows = len(activeDrivePath.items())
+        activeRows = len(activeDrivePath)
         for activeRow in range(activeRows):
-            drive = list(activeDrivePath.items())[activeRow][0]
-            path = list(activeDrivePath.items())[activeRow][1]
+            drive = activeDrivePath[activeRow][0]
+            path = activeDrivePath[activeRow][1]
             self.__createTableWidgetCells(qTableWidget, activeRow, True, drive, path)
 
-        customRows = len(customDrivePath.items())
+        customRows = len(customDrivePath)
         for customRow in range(customRows):
-            drive = list(customDrivePath.items())[customRow][0]
-            path = list(customDrivePath.items())[customRow][1]
+            drive = customDrivePath[customRow][0]
+            path = customDrivePath[customRow][1]
             self.__createTableWidgetCells(qTableWidget, activeRows + customRow, False, drive, path)
 
         qTableWidget.setColumnWidth(0, 45)

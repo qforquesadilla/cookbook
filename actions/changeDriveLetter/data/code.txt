@@ -1,3 +1,0 @@
-{
-    "M": "E:\\dev\\qforquesadilla\\outpost\\data\\settings"
-}

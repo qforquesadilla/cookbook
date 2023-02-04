@@ -18,6 +18,7 @@ class Cookbook(object):
 
     def __init__(self):
         '''
+        TBA
         '''
 
         # variables
@@ -50,6 +51,7 @@ class Cookbook(object):
 
     def __setupConfig(self):
         '''
+        TBA
         '''
 
         # load config
@@ -68,6 +70,7 @@ class Cookbook(object):
 
     def __buildUi(self):
         '''
+        TBA
         '''
 
         # define ui file paths
@@ -89,6 +92,7 @@ class Cookbook(object):
 
     def __linkCommands(self):
         '''
+        TBA
         '''
 
         self.__mainUi.menuLW.clicked.connect(self.__onChangeAction)
@@ -98,6 +102,7 @@ class Cookbook(object):
 
     def __setupActions(self):
         '''
+        TBA
         '''
 
         # load actions
@@ -119,14 +124,16 @@ class Cookbook(object):
             self.__setListWidget(self.__mainUi.menuLW, self.__actions.keys())
 
 
-
-
     ############
     # COMMANDS #
     ############
 
 
     def __onToggleMode(self, qPushButton):
+        '''
+        TBA
+        '''
+
         objectName = qPushButton.objectName()
 
         styleSheetOn = 'background-color: #D7E646; color: #313333'
@@ -147,6 +154,10 @@ class Cookbook(object):
 
 
     def __onChangeAction(self):
+        '''
+        TBA
+        '''
+
         actionName = self.__getListWidget(self.__mainUi.menuLW)
         self.__changeAction(actionName, self.__actionMode)
         self.__actionSelected = actionName
@@ -159,6 +170,10 @@ class Cookbook(object):
 
 
     def __changeAction(self, actionName, mode):
+        '''
+        TBA
+        '''
+
         obj = self.__actions[actionName]
         actionUi = obj.actionUi
 
@@ -178,18 +193,30 @@ class Cookbook(object):
 
 
     def __readJson(self, jsonPath):
+        '''
+        TBA
+        '''
+
         with open(jsonPath) as d:
             data = json.load(d)
         return data
 
 
     def __writeJson(self, jsonPath, keyValue):
+        '''
+        TBA
+        '''
+
         with open(jsonPath, 'w') as d:
             dump = json.dumps(keyValue, indent=4, sort_keys=True, ensure_ascii=False)
             d.write(dump)
 
 
     def __updateJson(self, jsonPath, keyValue):
+        '''
+        TBA
+        '''
+
         data = self.__readJson(jsonPath)
         for key in keyValue:
             value = keyValue[key]
@@ -198,10 +225,18 @@ class Cookbook(object):
         
 
     def __getListWidget(self, qListWidget):
+        '''
+        TBA
+        '''
+
         return qListWidget.currentItem().text()
 
 
     def __setListWidget(self, qListWidget, items):
+        '''
+        TBA
+        '''
+
         qListWidget.clear()
         for item in items:
             qListWidgetItem = QListWidgetItem()
@@ -211,18 +246,23 @@ class Cookbook(object):
 
 
     def __selectListWidget(self, qListWidget, item):
+        '''
+        TBA
+        '''
+
         qListWidgetItem = qListWidget.findItems(item, Qt.MatchExactly)
         qListWidget.setCurrentItem(qListWidgetItem[0])
         return qListWidgetItem
 
 
     def __setTextEdit(self, qTextEdit, text):
+        '''
+        TBA
+        '''
+
         qTextEdit.setText(text)
         return text
 
 
-
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     Cookbook()
